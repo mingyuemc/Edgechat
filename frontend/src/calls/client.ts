@@ -1,4 +1,5 @@
 import { CALL_RING_MS, CALL_STUN, type CallMode, type CallAction } from '../../../shared/voice-call.ts';
+import { randomUUID } from '../uuid.ts';
 
 interface CallSession {
   callId: string; roomId: number; callerId: number; calleeId: number; name: string;
@@ -27,7 +28,7 @@ export function createVoiceCallClient({ api, userId, onChange, onError,
   getMedia = () => navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false }),
   createPeer = config => new RTCPeerConnection(config),
   createAudio = () => new Audio(),
-  clientId = crypto.randomUUID() }: CallClientOptions) {
+  clientId = randomUUID() }: CallClientOptions) {
   let call: CallSession | null = null;
   let peer: RTCPeerConnection | null = null;
   let stream: MediaStream | null = null;
@@ -111,7 +112,7 @@ export function createVoiceCallClient({ api, userId, onChange, onError,
   async function start(room, mode: CallMode) {
     if (call || room.kind !== 'dm' || room.isBlockedByMe) return;
     const epoch = ++generation;
-    call = { callId: crypto.randomUUID(), roomId: Number(room.id), callerId: userId,
+    call = { callId: randomUUID(), roomId: Number(room.id), callerId: userId,
       calleeId: room.otherUser.id, name: room.otherUser.displayName || room.otherUser.username || room.name, mode };
     phase = 'permission'; change();
     try {

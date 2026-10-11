@@ -1,5 +1,6 @@
 import { cloneDemo, demoState } from './state.js';
 import { demoOwnsGroup } from './rbac.ts';
+import { randomUUID } from '../uuid.ts';
 
 export function demoInstanceBridge(path, method, body) {
   const channels = demoState.channels.filter((c) => c.kind !== 'dm' && demoOwnsGroup(c.id));
@@ -14,7 +15,7 @@ export function demoInstanceBridge(path, method, body) {
     const channel = channels.find((c) => c.id === Number(body.channelId));
     if (!channel || bindings.some((b) => b.channelId === channel.id && b.status !== 'revoked')) throw new Error('请选择未绑定的群组');
     const creating = path.endsWith('/invitations');
-    const id = crypto.randomUUID();
+    const id = randomUUID();
     const expiresAt = Date.now() + 600_000;
     // 只演示管理员交互，不解析真实凭据，也不对输入中的任何地址发请求。
     bindings.unshift({ id, channelId: channel.id, channelName: channel.name,

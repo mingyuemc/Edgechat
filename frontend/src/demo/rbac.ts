@@ -1,6 +1,7 @@
 import { demoState, findDemoUser, findDemoChannel, cloneDemo } from './state.js';
 import { ADMIN_PERMISSIONS, PERMISSION_KEYS, hasPermission, validatePermissions } from '../../../shared/admin-permissions.ts';
 import { resolvePolicy } from '../../../worker/src/rbac/policies.ts';
+import { randomUUID } from '../uuid.ts';
 
 function fail(message: string, status = 403): never { throw Object.assign(new Error(message), { status }); }
 function roles() {
@@ -49,7 +50,7 @@ export function demoRbac(path: string, method: string, body, offset = 0) {
   if (path === '/admin/rbac/roles' && method === 'GET') return { roles: cloneDemo(projection().slice(offset, offset + 100)) };
   if (path === '/admin/rbac/roles' && method === 'POST') {
     if (!body.name?.trim() || !validatePermissions(body.permissions)) fail('用户组名称或权限无效', 400);
-    list.push({ id: Math.max(...list.map((r) => r.id)) + 1, key: crypto.randomUUID(), ...body, enabled: true, revision: 0, updatedAt: new Date().toISOString() });
+    list.push({ id: Math.max(...list.map((r) => r.id)) + 1, key: randomUUID(), ...body, enabled: true, revision: 0, updatedAt: new Date().toISOString() });
     return { ok: true };
   }
   let match = path.match(/^\/admin\/rbac\/roles\/(\d+)(\/members)?$/);

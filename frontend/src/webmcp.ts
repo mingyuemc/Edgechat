@@ -1,6 +1,7 @@
 import api from './api.js';
 import { isDemoMode } from './runtime.js';
 import store from './store.js';
+import { randomUUID } from './uuid.ts';
 
 type ToolInput = Record<string, unknown>;
 
@@ -80,7 +81,7 @@ export function createEdgeChatWebMcpTools(
   overrides: Partial<WebMcpDependencies> = {}
 ): WebMcpTool[] {
   const apiClient = overrides.apiClient || api;
-  const createMessageId = overrides.createMessageId || (() => crypto.randomUUID());
+  const createMessageId = overrides.createMessageId || (() => randomUUID());
   const getSession = overrides.getSession || (() => store.session);
   const login = overrides.login || ((credentials) => store.login(credentials));
 
