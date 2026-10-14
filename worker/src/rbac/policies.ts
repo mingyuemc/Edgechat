@@ -43,6 +43,10 @@ export const ADMIN_POLICIES = [
   policy('rbac.assign', 'PUT', 'rbac/users/([1-9]\\d*)/role', [], { superOnly: true, fields: ['roleId', 'expectedAuthzVersion'], audit: true }),
   policy('rbac.unprotect', 'POST', 'rbac/users/([1-9]\\d*)/unprotect', [], { superOnly: true, fields: ['expectedAuthzVersion'], audit: true }),
   policy('audit.read', 'GET', 'audit', [], { superOnly: true }),
+  policy('truth_dare.settings.read', 'GET', 'truth-dare/settings', ['truth_dare.read']),
+  policy('truth_dare.settings.update', 'PUT', 'truth-dare/settings', ['truth_dare.settings.update'], { fields: ['allowMemberCreate'], audit: true }),
+  policy('truth_dare.history', 'GET', 'truth-dare/history', [], { superOnly: true }),
+  policy('truth_dare.history.export', 'GET', 'truth-dare/history/export', [], { superOnly: true }),
 ];
 
 export function resolvePolicy(method: string, path: string, payload: Record<string, unknown> = {}) {

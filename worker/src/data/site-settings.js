@@ -10,7 +10,27 @@ export async function getSiteSettings(db) {
 	return {
 		siteName: String(map.site_name || "Edgechat"),
 		siteIconUrl: siteIconUrlFromStored(map.site_icon_url),
+		allowMemberCreateGame: String(map.truth_dare_allow_member_create || "0") === "1",
 	};
+}
+
+function truthDareToggleStatement(db, allowMemberCreate) {
+	return db
+		.prepare(
+			`INSERT INTO site_settings (setting_key, setting_value, updated_at)
+			 VALUES ('truth_dare_allow_member_create', ?, CURRENT_TIMESTAMP)
+			 ON CONFLICT(setting_key) DO UPDATE
+			 SET setting_value = excluded.setting_value,
+			     updated_at = CURRENT_TIMESTAMP`,
+		)
+		.bind(allowMemberCreate ? "1" : "0");
+}
+
+export async function updateTruthDareSettings(db, { allowMemberCreate }) {
+	if (allowMemberCreate !== undefined) {
+		await truthDareToggleStatement(db, allowMemberCreate).run();
+	}
+	return (await getSiteSettings(db)).allowMemberCreateGame;
 }
 
 export async function updateSiteSettings(db, { siteName, siteIconUrl, siteOrigin = "" }) {

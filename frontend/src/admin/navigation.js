@@ -1,4 +1,4 @@
-import { Database, Gauge, Ghost, Link2, Send, Settings, UserCog, UserPlus, Wrench } from '@lucide/vue';
+import { Database, Gauge, Ghost, Link2, Send, Settings, Trophy, UserCog, UserPlus, Wrench } from '@lucide/vue';
 
 export const adminNavigation = [
   { id: 'rbac', labelKey: 'rbac.title', descriptionKey: 'rbac.description', to: '/admin/rbac', icon: UserCog },
@@ -50,6 +50,7 @@ export const adminNavigation = [
     icon: Settings,
     children: [
       { id: 'site-appearance', labelKey: 'admin.nav.siteAppearance', hash: '#site-appearance' },
+      { id: 'truth-dare-settings', labelKey: 'truthDare.admin.settingsTitle', hash: '#truth-dare-settings', permission: 'truth_dare.settings.update' },
       { id: 'version-update', labelKey: 'admin.nav.versionUpdate', hash: '#version-update' }
     ]
   },
@@ -74,6 +75,13 @@ export const adminNavigation = [
     to: '/admin/maintenance',
     icon: Wrench,
     separated: true
+  },
+  {
+    id: 'truth-dare-history',
+    labelKey: 'truthDare.admin.historyTitle',
+    descriptionKey: 'truthDare.admin.historyDescription',
+    to: '/admin/truth-dare-history',
+    icon: Trophy
   }
 ];
 
@@ -86,5 +94,6 @@ export const adminRouteIcons = {
   'instance-bridge': Link2,
   site: Settings,
   stealth: Ghost,
-  maintenance: Wrench
+  maintenance: Wrench,
+  'truth-dare': Trophy
 };

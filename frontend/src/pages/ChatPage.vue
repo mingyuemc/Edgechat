@@ -1,5 +1,5 @@
 <script setup>
-import { ArrowLeft, Ban, Bell, BellOff, ContactRound, Menu, MessageCircle, Phone, Settings, UsersRound } from '@lucide/vue';
+import { ArrowLeft, Ban, Bell, BellOff, ContactRound, Menu, MessageCircle, Phone, Settings, Sparkles, UsersRound } from '@lucide/vue';
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
@@ -70,6 +70,7 @@ const joiningPublicGroup = ref(false);
 const session = computed(() => store.session);
 const showAdminEntry = computed(() => Boolean(session.value?.canAccessAdmin));
 const isContactsView = computed(() => route.name === 'contacts');
+const isTruthDareView = computed(() => route.name === 'truth-dare');
 const contactsVisited = ref(isContactsView.value);
 const inboxActiveRoom = computed(() => isContactsView.value ? null : activeRoom.value);
 
@@ -375,6 +376,7 @@ function openAdmin() { router.push('/admin'); }
 function openSettings() { router.push('/settings'); }
 function openChat() { router.push('/'); }
 function openContacts() { router.push('/contacts'); }
+function openTruthDare() { router.push('/games'); }
 let nativeRoomNavigationReady = false;
 function openNativeRoom() {
   if (!nativeRoomNavigationReady) return;
@@ -570,6 +572,18 @@ watch(
           >
             <ContactRound :size="20" aria-hidden="true" />
             <span class="right-sidebar-action__label">{{ t('contacts.title') }}</span>
+          </button>
+          <button
+            type="button"
+            class="right-sidebar-action right-sidebar-action--labeled tooltip"
+            :class="{ 'right-sidebar-action--current': isTruthDareView }"
+            :data-tooltip="t('truthDare.title')"
+            :aria-label="t('truthDare.title')"
+            :aria-current="isTruthDareView ? 'page' : undefined"
+            @click="openTruthDare"
+          >
+            <Sparkles :size="20" aria-hidden="true" />
+            <span class="right-sidebar-action__label">{{ t('truthDare.title') }}</span>
           </button>
           <button
             type="button"
@@ -937,10 +951,11 @@ watch(
       :notifications-enabled="notificationsEnabled"
       :notification-label="notificationActionLabel"
       :notification-disabled="notificationToggleDisabled"
-      :active-view="isContactsView ? 'contacts' : 'chat'"
+      :active-view="isContactsView ? 'contacts' : isTruthDareView ? 'truth-dare' : 'chat'"
       @close="closeMobileNavigation"
       @chat="navigateFromMobileDrawer(openChat)"
       @contacts="navigateFromMobileDrawer(openContacts)"
+      @truth-dare="navigateFromMobileDrawer(openTruthDare)"
       @settings="navigateFromMobileDrawer(openSettings)"
       @admin="navigateFromMobileDrawer(openAdmin)"
       @notification="toggleNotifications"

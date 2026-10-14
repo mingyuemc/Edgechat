@@ -15,6 +15,7 @@ import {
 
 import { demoMaintenanceReport } from './maintenance.ts';
 import { demoInstanceBridge } from './instance-bridge.js';
+import { demoTruthDare } from './truth-dare.js';
 import { isGroupChannelKind } from '../../../shared/group-channel.ts';
 import { parseLocalUserId, validateBio } from '../../../shared/user-profile.ts';
 import { authorizeDemoAdmin, demoAuthorization, demoOwnsGroup, demoRbac } from './rbac.ts';
@@ -253,6 +254,10 @@ async function handleDemoRequest(path, options = {}) {
   }
   if (pathname.includes('/instance-bridge')) {
     const result = demoInstanceBridge(pathname, method, body);
+    if (result) return result;
+  }
+  if (pathname.startsWith('/truth-dare') || pathname.startsWith('/admin/truth-dare')) {
+    const result = demoTruthDare(pathname, method, body, url);
     if (result) return result;
   }
 

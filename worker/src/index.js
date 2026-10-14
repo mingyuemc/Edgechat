@@ -30,6 +30,8 @@ import { registerInstanceBridgePublicRoutes, registerInstanceBridgeRoutes } from
 import { InstanceBridge } from './do/InstanceBridge.ts';
 import { rescueBridgeDeliveries } from './integrations/instance-bridge/delivery.ts';
 import { registerChannelRoutes } from './api/channels.js';
+import { registerTruthDareRoutes, registerTruthDareAdminRoutes } from './api/truth-dare.ts';
+import { TruthDareRoom } from './do/TruthDareRoom.ts';
 import { registerContactRoutes } from './api/contacts.ts';
 import { registerLoginNetworkRoutes } from './api/login-network.ts';
 import { registerDmRoutes } from './api/dm.js';
@@ -294,6 +296,7 @@ registerUserBlockRoutes(app);
 registerUserProfileRoutes(app);
 registerUploadRoutes(app);
 registerChannelRoutes(app);
+registerTruthDareRoutes(app);
 registerAdminRoutes(app);
 registerRbacRoutes(app);
 registerStorageRoutes(app);
@@ -302,6 +305,7 @@ registerStealthRoutes(app);
 registerTelegramAdminRoutes(app);
 registerTelegramNotificationRoutes(app);
 registerInstanceBridgeRoutes(app);
+registerTruthDareAdminRoutes(app);
 
 app.get('/api/ws/:kind/:id', async (c) => {
   const session = c.get('session');
@@ -364,4 +368,4 @@ export function shouldRunDailyGc(scheduledTime) {
   const time = new Date(scheduledTime);
   return time.getUTCHours() === 19 && time.getUTCMinutes() === 0;
 }
-export { ChannelRoom, Scheduler, UserInbox, InstanceBridge, VoiceCall, TelegramNotifications };
+export { ChannelRoom, Scheduler, UserInbox, InstanceBridge, VoiceCall, TelegramNotifications, TruthDareRoom };

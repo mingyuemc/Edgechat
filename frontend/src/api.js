@@ -296,6 +296,44 @@ export default {
   adminSiteSettings() {
     return request('/admin/site-settings');
   },
+  truthDareOverview() {
+    return request('/truth-dare/overview');
+  },
+  truthDareCreateGame(body) {
+    return request('/truth-dare/games', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  },
+  truthDareReviewApplication(id, body) {
+    return request(`/truth-dare/applications/${id}/review`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  },
+  truthDareCancelApplication(id) {
+    return request(`/truth-dare/applications/${id}/cancel`, { method: 'POST' });
+  },
+  truthDareJoin(id) {
+    return request(`/truth-dare/games/${id}/join`, { method: 'POST' });
+  },
+  truthDareLeave(id) {
+    return request(`/truth-dare/games/${id}/leave`, { method: 'POST' });
+  },
+  truthDareState(id) {
+    return request(`/truth-dare/games/${id}/state`);
+  },
+  truthDareAction(id, body) {
+    return request(`/truth-dare/games/${id}/action`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  },
+  adminTruthDareSettings() {
+    return request('/admin/truth-dare/settings');
+  },
+  saveAdminTruthDareSettings(allowMemberCreate) {
+    return request('/admin/truth-dare/settings', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: { allowMemberCreate }
+    });
+  },
+  adminTruthDareHistory(offset = 0) {
+    return request(`/admin/truth-dare/history?offset=${offset}`);
+  },
+  adminTruthDareHistoryExport() {
+    return request('/admin/truth-dare/history/export');
+  },
   adminTelegram() {
     return request('/admin/telegram');
   },

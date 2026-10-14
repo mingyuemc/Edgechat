@@ -241,6 +241,16 @@ export const D1_MIGRATIONS = [
       "index:idx_telegram_notification_sender", "index:idx_telegram_notification_recipient",
       "index:idx_telegram_notification_created", "index:idx_telegram_notification_message"],
   },
+  {
+    id: "2026-10-14-truth-dare",
+    file: "worker/migrations/2026-10-14-truth-dare.sql",
+    artifacts: [
+      "table:truth_dare_games", "table:truth_dare_participants", "table:truth_dare_applications",
+      "table:truth_dare_rounds", "table:truth_dare_prompts", "table:truth_dare_votes",
+      "index:idx_truth_dare_games_status", "index:idx_truth_dare_applications_status",
+      "index:idx_truth_dare_votes_prompt",
+    ],
+  },
 ];
 
 // b3f6855 曾发布、0c13e8f 已撤回的迁移：仅识别历史 ledger，不要求新安装创建废弃表，也不删除旧数据。

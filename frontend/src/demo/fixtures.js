@@ -441,6 +441,19 @@ export function createDemoFixtures(locale = getLocale()) {
         }
       ]
     },
+    truthDare: {
+      allowMemberCreate: false,
+      games: [],
+      participants: [],
+      applications: [],
+      rounds: [],
+      prompts: [],
+      votes: [],
+      nextGameId: 1,
+      nextApplicationId: 1,
+      nextRoundId: 1,
+      nextPromptId: 1
+    },
     nextUserId: 8,
     nextChannelId: 5,
     nextDmId: 11,

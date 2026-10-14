@@ -1,5 +1,5 @@
 <script setup>
-import { Bell, BellOff, ContactRound, LayoutDashboard, LogOut, MessageCircle, Settings, X } from '@lucide/vue';
+import { Bell, BellOff, ContactRound, LayoutDashboard, LogOut, MessageCircle, Settings, Sparkles, X } from '@lucide/vue';
 import { ref, toRef } from 'vue';
 import { useOverlayLifecycle } from '../../composables/useOverlayLifecycle.js';
 import { t } from '../../i18n.js';
@@ -16,7 +16,7 @@ const props = defineProps({
   activeView: { type: String, default: 'chat' }
 });
 
-const emit = defineEmits(['close', 'chat', 'contacts', 'settings', 'admin', 'notification', 'logout']);
+const emit = defineEmits(['close', 'chat', 'contacts', 'truth-dare', 'settings', 'admin', 'notification', 'logout']);
 const drawerEl = ref(null);
 
 useOverlayLifecycle({
@@ -58,6 +58,10 @@ useOverlayLifecycle({
             <button type="button" :aria-current="activeView === 'contacts' ? 'page' : undefined" @click="emit('contacts')">
               <ContactRound :size="21" aria-hidden="true" />
               <span>{{ t('contacts.title') }}</span>
+            </button>
+            <button type="button" :aria-current="activeView === 'truth-dare' ? 'page' : undefined" @click="emit('truth-dare')">
+              <Sparkles :size="21" aria-hidden="true" />
+              <span>{{ t('truthDare.title') }}</span>
             </button>
             <button type="button" @click="emit('settings')">
               <Settings :size="21" aria-hidden="true" />

@@ -33,6 +33,12 @@ const router = createRouter({
       meta: { transition: 'page', workspace: true }
     },
     {
+      path: '/games',
+      name: 'truth-dare',
+      component: () => import('./pages/TruthDarePage.vue'),
+      meta: { transition: 'page' }
+    },
+    {
       path: '/admin',
       component: () => import('./pages/AdminPage.vue'),
       meta: { admin: true, transition: 'page' },
@@ -102,6 +108,12 @@ const router = createRouter({
           name: 'admin-site',
           component: () => import('./pages/AdminSitePage.vue'),
           meta: { admin: true, adminTitleKey: 'admin.nav.site', adminIcon: 'site', transition: 'page' }
+        },
+        {
+          path: 'truth-dare-history',
+          name: 'admin-truth-dare-history',
+          component: () => import('./pages/AdminTruthDareHistoryPage.vue'),
+          meta: { admin: true, adminTitleKey: 'truthDare.admin.historyTitle', adminIcon: 'truth-dare', transition: 'page' }
         }
       ]
     },

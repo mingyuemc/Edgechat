@@ -83,6 +83,14 @@ class_name = "TelegramNotifications"
 tag = "v5"
 new_sqlite_classes = ["TelegramNotifications"]
 
+[[durable_objects.bindings]]
+name = "TRUTH_DARE_ROOM"
+class_name = "TruthDareRoom"
+
+[[migrations]]
+tag = "v6"
+new_sqlite_classes = ["TruthDareRoom"]
+
 [assets]
 directory = "./frontend/dist"
 not_found_handling = "single-page-application"

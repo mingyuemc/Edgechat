@@ -8,8 +8,8 @@ import {
 import { CHINESE_LOCALE, setLocale } from "../frontend/src/i18n.js";
 import { checkForUpdates } from "../frontend/src/update-check.js";
 
-beforeEach(() => {
-	setLocale(CHINESE_LOCALE);
+beforeEach(async () => {
+	await setLocale(CHINESE_LOCALE);
 });
 
 const build = {
