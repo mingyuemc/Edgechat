@@ -9,6 +9,7 @@ import {
   TRUTH_DARE_CHOICE_MS,
   TRUTH_DARE_CHOICES,
   TRUTH_DARE_COLLECT_MS,
+  TRUTH_DARE_CONFIRM_MS,
   TRUTH_DARE_CREATE_PERMISSION,
   TRUTH_DARE_ONLINE_MS,
   TRUTH_DARE_SCOPES,
@@ -21,8 +22,11 @@ import {
   timeoutTransition
 } from '../../../worker/src/data/truth-dare.ts';
 
-// 机器人距离上一次阶段推进至少等待这么久，让真人能看清每个阶段，而不是瞬间跳过。
-const BOT_STEP_MS = 2200;
+// 机器人每个节拍只推进一步（出题/投票等），与前端轮询间隔对齐，
+// 让单个真人访客能逐步看清候选与票数的累积，而不是整段瞬间跳过。
+const BOT_STEP_MS = 1200;
+// 待确认阶段若真人访客正是本轮确认者，先留出这段确认窗口；超时再由机器人代确认，避免演示卡住。
+const BOT_CONFIRM_WAIT_MS = 6000;
 
 const BOT_PROMPTS = {
   truth: ['你最近一次大笑是因为什么？', '你最想和谁交换一天人生？', '说出一件你一直没敢告诉别人的小事。'],
@@ -355,7 +359,7 @@ function finalizeAnswer(game) {
     setPhase(game, 'resolved', null);
     return;
   }
-  setPhase(game, 'confirming', null);
+  setPhase(game, 'confirming', Date.now() + TRUTH_DARE_CONFIRM_MS);
 }
 
 function confirmRound(game, userId) {
@@ -439,6 +443,10 @@ function applyTimeout(game, transition) {
   }
   if (transition.kind === 'close_voting') {
     closeVoting(game);
+    return;
+  }
+  if (transition.kind === 'auto_confirm') {
+    resolveRound(game);
   }
 }
 
@@ -479,11 +487,17 @@ function progressBots(game) {
   const viewerId = sessionUserId();
   const chosenId = game.chosenUserId == null ? null : Number(game.chosenUserId);
   const bots = participantsOf(game.id).filter((participant) => Number(participant.userId) !== viewerId);
+  // 每个节拍只推进一步，并重置节拍起点，让每一步子阶段都至少间隔一个节拍可见。
+  const step = () => {
+    game.phaseStartedAt = Date.now();
+  };
 
   if (game.phase === 'choosing') {
     // 被选中者是机器人时，代表他做出选择；真人在场时留给他自己选（超时后走自动大冒险）。
     if (chosenId != null && chosenId !== viewerId) {
-      const choice = Number(game.roundNo) % 2 === 1 ? 'dare' : 'truth';
+      // 机器人被选中的轮次固定选“大冒险”，这样真人访客（本轮的非被选中参与者）
+      // 才能作为“确认者”体验确认环节，而不是被机器人选“真心话”后直接结算跳过。
+      const choice = 'dare';
       const round = findRound(game.id, game.roundNo);
       if (round) round.choice = choice;
       game.choice = choice;
@@ -494,10 +508,14 @@ function progressBots(game) {
 
   if (game.phase === 'collecting') {
     const kind = game.choice === 'dare' ? 'dare' : 'truth';
-    for (const bot of bots) {
-      if (Number(bot.userId) === chosenId) continue;
-      if (promptsOf(game.id, game.roundNo).some((prompt) => Number(prompt.authorId) === Number(bot.userId))) continue;
+    const bot = bots.find(
+      (candidate) =>
+        Number(candidate.userId) !== chosenId &&
+        !promptsOf(game.id, game.roundNo).some((prompt) => Number(prompt.authorId) === Number(candidate.userId))
+    );
+    if (bot) {
       insertPrompt(game, Number(bot.userId), kind, botPrompt(kind, Number(game.roundNo), Number(bot.userId)));
+      step();
     }
     maybeAutoOpenVoting(game);
     return;
@@ -505,12 +523,16 @@ function progressBots(game) {
 
   if (game.phase === 'voting') {
     const prompts = promptsOf(game.id, game.roundNo);
-    if (prompts.length) {
-      for (const bot of bots) {
-        if (Number(bot.userId) === chosenId) continue;
-        if (votesOf(game.id, game.roundNo).some((vote) => Number(vote.voterId) === Number(bot.userId))) continue;
-        insertVote(game, Number(bot.userId), prompts[Number(bot.userId) % prompts.length].id);
-      }
+    const bot = prompts.length
+      ? bots.find(
+          (candidate) =>
+            Number(candidate.userId) !== chosenId &&
+            !votesOf(game.id, game.roundNo).some((vote) => Number(vote.voterId) === Number(candidate.userId))
+        )
+      : null;
+    if (bot) {
+      insertVote(game, Number(bot.userId), prompts[Number(bot.userId) % prompts.length].id);
+      step();
     }
     maybeAutoCloseVoting(game);
     return;
@@ -526,8 +548,13 @@ function progressBots(game) {
   }
 
   if (game.phase === 'confirming') {
+    // 若真人访客正是本轮确认者（参与者且非被选中者），先留出确认窗口；
+    // 超过窗口仍未确认，再由机器人代确认，既让访客能点到“确认”，也不会长时间卡住。
+    const viewerCanConfirm = Number(viewerId) !== Number(chosenId) && isParticipant(game.id, viewerId);
+    if (viewerCanConfirm && Date.now() - Number(game.phaseStartedAt) < BOT_CONFIRM_WAIT_MS) return;
     const confirmer = bots.find((participant) => Number(participant.userId) !== chosenId);
     if (confirmer) confirmRound(game, Number(confirmer.userId));
+    else step();
   }
 }
 
@@ -616,9 +643,12 @@ function actionSpin(game, userId) {
     userId: Number(participant.userId),
     online: participantOnline(participant, sessionUserId())
   }));
-  const chosen = chooseOnlineChosen(participants);
-  if (!chosen) fail('当前没有在线玩家');
   const roundNo = Number(game.roundNo) + 1;
+  // demo 只有单个真人访客：奇数轮固定由真人当主角，让他能完整体验选择/作答；
+  // 偶数轮再随机抽给其他演示玩家，方便体验出题与投票，避免“永远抽不到自己”。
+  const viewer = participants.find((participant) => Number(participant.userId) === Number(userId) && participant.online);
+  const chosen = roundNo % 2 === 1 && viewer ? viewer : chooseOnlineChosen(participants);
+  if (!chosen) fail('当前没有在线玩家');
   td().rounds.push({
     id: td().nextRoundId++,
     gameId: Number(game.id),
@@ -844,8 +874,12 @@ function createGame(userId, payload) {
     if (!(channel.memberIds || []).map(Number).includes(Number(userId))) fail('你不是该群组成员', 403);
     participantUserIds = channelMemberIds(channelId);
   } else if (scope === 'manual') {
-    participantUserIds = resolveInvited(Array.isArray(payload.invitedUserIds) ? payload.invitedUserIds : []);
-    if (!participantUserIds.length) fail('请至少邀请一位玩家');
+    const raw = Array.isArray(payload.invitedUserIds) ? payload.invitedUserIds : [];
+    participantUserIds = resolveInvited(raw);
+    if (!participantUserIds.length) {
+      // 区分“没填名单”与“名单里的用户名都无效”，给出准确提示。
+      fail(raw.some((value) => String(value).trim()) ? '邀请的用户不存在或不可用，请检查用户名' : '请至少邀请一位玩家');
+    }
   } else if (scope === 'public') {
     // demo 公共房没有其他真实访客，用其他演示用户充当“在线玩家”，保证单个访客也能走完整个流程。
     participantUserIds = demoState.users

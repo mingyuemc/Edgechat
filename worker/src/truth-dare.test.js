@@ -45,8 +45,12 @@ test('出题阶段超时：有台词进入投票，无人提问直接结算本�
   assert.equal(some.deadlineMs, 2000 + 60000);
 });
 
-test('投票阶段超时触发结算票选，其他阶段无兜底时限', () => {
+test('投票阶段超时触发结算票选，待确认超时自动结算，其余阶段无兜底时限', () => {
   assert.equal(timeoutTransition('voting', 5, true).kind, 'close_voting');
+  // 待确认阶段也必须有兜底：无人确认时自动结算，避免整局卡住。
+  const confirm = timeoutTransition('confirming', 5, false);
+  assert.equal(confirm.kind, 'auto_confirm');
+  assert.equal(confirm.deadlineMs, null);
   assert.equal(timeoutTransition('answering', 5, true), null);
   assert.equal(timeoutTransition('resolved', 5, true), null);
 });

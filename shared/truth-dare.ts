@@ -21,6 +21,8 @@ export const TRUTH_DARE_CHOICE_MS = 10000;
 // 出题与投票阶段的兜底时限，避免有人掉线导致整局卡住。
 export const TRUTH_DARE_COLLECT_MS = 60000;
 export const TRUTH_DARE_VOTE_MS = 60000;
+// 大冒险作答后的确认兜底时限：无人确认时自动结算，避免整局卡在待确认。
+export const TRUTH_DARE_CONFIRM_MS = 60000;
 // 参与者被视为“在线”的最近活跃窗口。
 export const TRUTH_DARE_ONLINE_MS = 30000;
 // 候选台词与作答的长度上限。

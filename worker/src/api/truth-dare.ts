@@ -81,8 +81,12 @@ export function registerTruthDareRoutes(app) {
       if (!membership) throw new ApiError('你不是该群组成员', 403);
       participantUserIds = await listChannelMemberIds(db, channelId);
     } else if (scope === 'manual') {
-      const invited = await validUserIds(db, Array.isArray(payload.invitedUserIds) ? payload.invitedUserIds : []);
-      if (!invited.length) throw new ApiError('请至少邀请一位玩家');
+      const raw = Array.isArray(payload.invitedUserIds) ? payload.invitedUserIds : [];
+      const invited = await validUserIds(db, raw);
+      if (!invited.length) {
+        // 区分“没填名单”与“名单里的用户名都无效”，给出准确提示。
+        throw new ApiError(raw.some((value) => String(value).trim()) ? '邀请的用户不存在或不可用，请检查用户名' : '请至少邀请一位玩家');
+      }
       participantUserIds = invited;
     }
 

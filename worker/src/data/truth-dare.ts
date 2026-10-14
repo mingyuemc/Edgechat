@@ -27,7 +27,8 @@ export function chooseOnlineChosen(participants, random = Math.random) {
 
 // 依据当前阶段与兜底时限计算超时后的推进动作；无超时的阶段返回 null。
 // kind=auto_dare：选择超时强制大冒险；to_voting：出题超时进入投票；
-// resolve：出题超时且无人提问直接结算本轮；close_voting：投票超时结算票选。
+// resolve：出题超时且无人提问直接结算本轮；close_voting：投票超时结算票选；
+// auto_confirm：待确认超时（无人确认）自动结算。
 export function timeoutTransition(phase, nowMs, hasPrompts) {
   if (phase === 'choosing') {
     return { kind: 'auto_dare', choice: 'dare', choiceAuto: true, deadlineMs: nowMs + TRUTH_DARE_COLLECT_MS };
@@ -39,6 +40,9 @@ export function timeoutTransition(phase, nowMs, hasPrompts) {
   }
   if (phase === 'voting') {
     return { kind: 'close_voting', deadlineMs: null };
+  }
+  if (phase === 'confirming') {
+    return { kind: 'auto_confirm', deadlineMs: null };
   }
   return null;
 }

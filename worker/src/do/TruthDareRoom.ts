@@ -22,6 +22,7 @@ import {
 import {
   TRUTH_DARE_CHOICE_MS,
   TRUTH_DARE_COLLECT_MS,
+  TRUTH_DARE_CONFIRM_MS,
   TRUTH_DARE_ONLINE_MS,
   TRUTH_DARE_VOTE_MS
 } from '../../../shared/truth-dare.ts';
@@ -165,6 +166,10 @@ export class TruthDareRoom {
     }
     if (transition.kind === 'close_voting') {
       await this.closeVoting(game);
+      return;
+    }
+    if (transition.kind === 'auto_confirm') {
+      await this.resolveRound(game);
     }
   }
 
@@ -315,8 +320,8 @@ export class TruthDareRoom {
     } else {
       statements.push(
         this.db()
-          .prepare(`UPDATE truth_dare_games SET phase = 'confirming', phase_deadline_ms = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
-          .bind(game.id)
+          .prepare(`UPDATE truth_dare_games SET phase = 'confirming', phase_deadline_ms = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
+          .bind(Date.now() + TRUTH_DARE_CONFIRM_MS, game.id)
       );
     }
     await this.db().batch(statements);
