@@ -125,7 +125,7 @@ onBeforeUnmount(() => {
 
     <svg class="spin-wheel__svg" viewBox="0 0 200 200" aria-hidden="true">
       <circle cx="100" cy="100" :r="RADIUS + 4" class="spin-wheel__ring" />
-      <g :style="rotorStyle" @transitionend="handleTransitionEnd">
+      <g class="spin-wheel__rotor" :style="rotorStyle" @transitionend="handleTransitionEnd">
         <template v-if="count === 1">
           <circle cx="100" cy="100" :r="RADIUS" :fill="sectors[0]?.fill" :stroke="sectors[0]?.stroke" stroke-width="1.5" />
         </template>
@@ -240,6 +240,13 @@ onBeforeUnmount(() => {
   fill: rgba(15, 23, 42, 0.85);
   stroke: rgba(255, 255, 255, 0.28);
   stroke-width: 1;
+}
+
+/* SVG 分组默认以 viewBox 左上角(0,0)为旋转原点，必须显式设为圆心，
+   否则转盘会绕角旋转而不是绕圆心旋转。 */
+.spin-wheel__rotor {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
 }
 
 .spin-wheel__sector--active {
