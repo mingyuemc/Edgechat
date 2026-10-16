@@ -11,6 +11,7 @@ export async function getSiteSettings(db) {
 		siteName: String(map.site_name || "Edgechat"),
 		siteIconUrl: siteIconUrlFromStored(map.site_icon_url),
 		allowMemberCreateGame: String(map.truth_dare_allow_member_create || "0") === "1",
+		allowMemberCreateWerewolf: String(map.werewolf_allow_member_create || "0") === "1",
 	};
 }
 
@@ -31,6 +32,25 @@ export async function updateTruthDareSettings(db, { allowMemberCreate }) {
 		await truthDareToggleStatement(db, allowMemberCreate).run();
 	}
 	return (await getSiteSettings(db)).allowMemberCreateGame;
+}
+
+function werewolfToggleStatement(db, allowMemberCreate) {
+	return db
+		.prepare(
+			`INSERT INTO site_settings (setting_key, setting_value, updated_at)
+			 VALUES ('werewolf_allow_member_create', ?, CURRENT_TIMESTAMP)
+			 ON CONFLICT(setting_key) DO UPDATE
+			 SET setting_value = excluded.setting_value,
+			     updated_at = CURRENT_TIMESTAMP`,
+		)
+		.bind(allowMemberCreate ? "1" : "0");
+}
+
+export async function updateWerewolfSettings(db, { allowMemberCreate }) {
+	if (allowMemberCreate !== undefined) {
+		await werewolfToggleStatement(db, allowMemberCreate).run();
+	}
+	return (await getSiteSettings(db)).allowMemberCreateWerewolf;
 }
 
 export async function updateSiteSettings(db, { siteName, siteIconUrl, siteOrigin = "" }) {

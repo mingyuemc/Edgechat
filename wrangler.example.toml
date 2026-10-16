@@ -91,6 +91,14 @@ class_name = "TruthDareRoom"
 tag = "v6"
 new_sqlite_classes = ["TruthDareRoom"]
 
+[[durable_objects.bindings]]
+name = "WEREWOLF_ROOM"
+class_name = "WerewolfRoom"
+
+[[migrations]]
+tag = "v7"
+new_sqlite_classes = ["WerewolfRoom"]
+
 [assets]
 directory = "./frontend/dist"
 not_found_handling = "single-page-application"

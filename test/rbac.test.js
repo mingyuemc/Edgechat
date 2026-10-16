@@ -178,7 +178,7 @@ test('RBAC：所有后台路由均登记策略，新权限不会自动授予已�
     }
   }
   assert.equal(resolvePolicy('GET', '/api/admin/undeclared'), null);
-  assert.equal(ADMIN_PERMISSIONS.length, 24);
+  assert.equal(ADMIN_PERMISSIONS.length, 27);
 });
 
 test('RBAC：旧实例一次性迁移保留管理员与普通用户，不解封或覆盖数据', async () => {

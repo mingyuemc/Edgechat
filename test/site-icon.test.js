@@ -118,6 +118,7 @@ test("本站完整 URL 保存为原子保护的本地 key，外链不阻止无�
 		siteName: "Edgechat",
 		siteIconUrl: "https://cdn.example/icon.png",
 		allowMemberCreateGame: false,
+		allowMemberCreateWerewolf: false,
 	});
 	const externalDeletes = [];
 	await runScheduledGc({

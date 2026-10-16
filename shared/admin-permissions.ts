@@ -23,6 +23,9 @@ export const ADMIN_PERMISSIONS = [
   ['truth_dare.read', 'truth_dare', '查看真心话大冒险', '对局清单、受邀名单与站点开关状态'],
   ['truth_dare.create', 'truth_dare', '允许创建游戏', '可直接开局，并审批他人的开局申请', 'truth_dare.read'],
   ['truth_dare.settings.update', 'truth_dare', '修改游戏设置', '仅站点级“允许成员创建游戏”开关', 'truth_dare.read'],
+  ['werewolf.read', 'werewolf', '查看狼人杀', '对局清单、受邀名单与站点开关状态'],
+  ['werewolf.create', 'werewolf', '允许创建狼人杀游戏', '可直接开局，并审批他人的开局申请', 'werewolf.read'],
+  ['werewolf.settings.update', 'werewolf', '修改狼人杀设置', '仅站点级“允许成员创建游戏”开关', 'werewolf.read'],
 ].map(([key, module, name, description, dependency, risk]) => ({
   key: key!, module: module!, name: name!, description: description!,
   dependencies: dependency ? [dependency] : [], risk: risk || 'normal',

@@ -47,6 +47,10 @@ export const ADMIN_POLICIES = [
   policy('truth_dare.settings.update', 'PUT', 'truth-dare/settings', ['truth_dare.settings.update'], { fields: ['allowMemberCreate'], audit: true }),
   policy('truth_dare.history', 'GET', 'truth-dare/history', [], { superOnly: true }),
   policy('truth_dare.history.export', 'GET', 'truth-dare/history/export', [], { superOnly: true }),
+  policy('werewolf.settings.read', 'GET', 'werewolf/settings', ['werewolf.read']),
+  policy('werewolf.settings.update', 'PUT', 'werewolf/settings', ['werewolf.settings.update'], { fields: ['allowMemberCreate'], audit: true }),
+  policy('werewolf.history', 'GET', 'werewolf/history', [], { superOnly: true }),
+  policy('werewolf.history.export', 'GET', 'werewolf/history/export', [], { superOnly: true }),
 ];
 
 export function resolvePolicy(method: string, path: string, payload: Record<string, unknown> = {}) {

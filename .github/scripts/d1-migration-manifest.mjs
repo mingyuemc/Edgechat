@@ -251,6 +251,16 @@ export const D1_MIGRATIONS = [
       "index:idx_truth_dare_votes_prompt",
     ],
   },
+  {
+    id: "2026-10-15-werewolf",
+    file: "worker/migrations/2026-10-15-werewolf.sql",
+    artifacts: [
+      "table:werewolf_games", "table:werewolf_participants", "table:werewolf_applications",
+      "table:werewolf_rounds", "table:werewolf_night_actions", "table:werewolf_votes",
+      "index:idx_werewolf_games_status", "index:idx_werewolf_applications_status",
+      "index:idx_werewolf_night_actions_round",
+    ],
+  },
 ];
 
 // b3f6855 曾发布、0c13e8f 已撤回的迁移：仅识别历史 ledger，不要求新安装创建废弃表，也不删除旧数据。

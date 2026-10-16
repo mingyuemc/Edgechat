@@ -224,12 +224,14 @@ test("站点设置 projection 使用稳定默认值", async () => {
 		siteName: "CFChat",
 		siteIconUrl: "/icon.png",
 		allowMemberCreateGame: false,
+		allowMemberCreateWerewolf: false,
 	});
 	const defaults = createQueryDb([]);
 	assert.deepEqual(await getSiteSettings(defaults.db), {
 		siteName: "Edgechat",
 		siteIconUrl: "",
 		allowMemberCreateGame: false,
+		allowMemberCreateWerewolf: false,
 	});
 });
 
