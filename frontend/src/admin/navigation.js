@@ -1,4 +1,4 @@
-import { Database, Gauge, Ghost, Link2, Send, Settings, Trophy, UserCog, UserPlus, Wrench } from '@lucide/vue';
+import { Database, Gauge, Ghost, Link2, Moon, Send, Settings, Trophy, UserCog, UserPlus, Wrench } from '@lucide/vue';
 
 export const adminNavigation = [
   { id: 'rbac', labelKey: 'rbac.title', descriptionKey: 'rbac.description', to: '/admin/rbac', icon: UserCog },
@@ -51,6 +51,7 @@ export const adminNavigation = [
     children: [
       { id: 'site-appearance', labelKey: 'admin.nav.siteAppearance', hash: '#site-appearance' },
       { id: 'truth-dare-settings', labelKey: 'truthDare.admin.settingsTitle', hash: '#truth-dare-settings', permission: 'truth_dare.settings.update' },
+      { id: 'werewolf-settings', labelKey: 'werewolf.admin.settingsTitle', hash: '#werewolf-settings', permission: 'werewolf.settings.update' },
       { id: 'version-update', labelKey: 'admin.nav.versionUpdate', hash: '#version-update' }
     ]
   },
@@ -82,6 +83,13 @@ export const adminNavigation = [
     descriptionKey: 'truthDare.admin.historyDescription',
     to: '/admin/truth-dare-history',
     icon: Trophy
+  },
+  {
+    id: 'werewolf-history',
+    labelKey: 'werewolf.admin.historyTitle',
+    descriptionKey: 'werewolf.admin.historyDescription',
+    to: '/admin/werewolf-history',
+    icon: Moon
   }
 ];
 
@@ -95,5 +103,6 @@ export const adminRouteIcons = {
   site: Settings,
   stealth: Ghost,
   maintenance: Wrench,
-  'truth-dare': Trophy
+  'truth-dare': Trophy,
+  werewolf: Moon
 };

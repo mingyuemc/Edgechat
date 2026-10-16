@@ -334,6 +334,44 @@ export default {
   adminTruthDareHistoryExport() {
     return request('/admin/truth-dare/history/export');
   },
+  werewolfOverview() {
+    return request('/werewolf/overview');
+  },
+  werewolfCreateGame(body) {
+    return request('/werewolf/games', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  },
+  werewolfReviewApplication(id, body) {
+    return request(`/werewolf/applications/${id}/review`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  },
+  werewolfCancelApplication(id) {
+    return request(`/werewolf/applications/${id}/cancel`, { method: 'POST' });
+  },
+  werewolfJoin(id) {
+    return request(`/werewolf/games/${id}/join`, { method: 'POST' });
+  },
+  werewolfLeave(id) {
+    return request(`/werewolf/games/${id}/leave`, { method: 'POST' });
+  },
+  werewolfState(id) {
+    return request(`/werewolf/games/${id}/state`);
+  },
+  werewolfAction(id, body) {
+    return request(`/werewolf/games/${id}/action`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+  },
+  adminWerewolfSettings() {
+    return request('/admin/werewolf/settings');
+  },
+  saveAdminWerewolfSettings(allowMemberCreate) {
+    return request('/admin/werewolf/settings', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: { allowMemberCreate }
+    });
+  },
+  adminWerewolfHistory(offset = 0) {
+    return request(`/admin/werewolf/history?offset=${offset}`);
+  },
+  adminWerewolfHistoryExport() {
+    return request('/admin/werewolf/history/export');
+  },
   adminTelegram() {
     return request('/admin/telegram');
   },

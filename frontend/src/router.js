@@ -39,6 +39,12 @@ const router = createRouter({
       meta: { transition: 'page' }
     },
     {
+      path: '/werewolf',
+      name: 'werewolf',
+      component: () => import('./pages/WerewolfPage.vue'),
+      meta: { transition: 'page' }
+    },
+    {
       path: '/admin',
       component: () => import('./pages/AdminPage.vue'),
       meta: { admin: true, transition: 'page' },
@@ -114,6 +120,12 @@ const router = createRouter({
           name: 'admin-truth-dare-history',
           component: () => import('./pages/AdminTruthDareHistoryPage.vue'),
           meta: { admin: true, adminTitleKey: 'truthDare.admin.historyTitle', adminIcon: 'truth-dare', transition: 'page' }
+        },
+        {
+          path: 'werewolf-history',
+          name: 'admin-werewolf-history',
+          component: () => import('./pages/AdminWerewolfHistoryPage.vue'),
+          meta: { admin: true, adminTitleKey: 'werewolf.admin.historyTitle', adminIcon: 'werewolf', transition: 'page' }
         }
       ]
     },

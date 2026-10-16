@@ -454,6 +454,18 @@ export function createDemoFixtures(locale = getLocale()) {
       nextRoundId: 1,
       nextPromptId: 1
     },
+    werewolf: {
+      allowMemberCreate: false,
+      games: [],
+      participants: [],
+      applications: [],
+      rounds: [],
+      nightActions: [],
+      votes: [],
+      nextGameId: 1,
+      nextApplicationId: 1,
+      nextRoundId: 1
+    },
     nextUserId: 8,
     nextChannelId: 5,
     nextDmId: 11,

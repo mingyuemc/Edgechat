@@ -1,5 +1,5 @@
 <script setup>
-import { ArrowLeft, Ban, Bell, BellOff, ContactRound, Menu, MessageCircle, Phone, Settings, Sparkles, UsersRound } from '@lucide/vue';
+import { ArrowLeft, Ban, Bell, BellOff, ContactRound, Menu, MessageCircle, Moon, Phone, Settings, Sparkles, UsersRound } from '@lucide/vue';
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
@@ -71,6 +71,7 @@ const session = computed(() => store.session);
 const showAdminEntry = computed(() => Boolean(session.value?.canAccessAdmin));
 const isContactsView = computed(() => route.name === 'contacts');
 const isTruthDareView = computed(() => route.name === 'truth-dare');
+const isWerewolfView = computed(() => route.name === 'werewolf');
 const contactsVisited = ref(isContactsView.value);
 const inboxActiveRoom = computed(() => isContactsView.value ? null : activeRoom.value);
 
@@ -377,6 +378,7 @@ function openSettings() { router.push('/settings'); }
 function openChat() { router.push('/'); }
 function openContacts() { router.push('/contacts'); }
 function openTruthDare() { router.push('/games'); }
+function openWerewolf() { router.push('/werewolf'); }
 let nativeRoomNavigationReady = false;
 function openNativeRoom() {
   if (!nativeRoomNavigationReady) return;
@@ -584,6 +586,18 @@ watch(
           >
             <Sparkles :size="20" aria-hidden="true" />
             <span class="right-sidebar-action__label">{{ t('truthDare.title') }}</span>
+          </button>
+          <button
+            type="button"
+            class="right-sidebar-action right-sidebar-action--labeled tooltip"
+            :class="{ 'right-sidebar-action--current': isWerewolfView }"
+            :data-tooltip="t('werewolf.title')"
+            :aria-label="t('werewolf.title')"
+            :aria-current="isWerewolfView ? 'page' : undefined"
+            @click="openWerewolf"
+          >
+            <Moon :size="20" aria-hidden="true" />
+            <span class="right-sidebar-action__label">{{ t('werewolf.title') }}</span>
           </button>
           <button
             type="button"
@@ -951,11 +965,12 @@ watch(
       :notifications-enabled="notificationsEnabled"
       :notification-label="notificationActionLabel"
       :notification-disabled="notificationToggleDisabled"
-      :active-view="isContactsView ? 'contacts' : isTruthDareView ? 'truth-dare' : 'chat'"
+      :active-view="isContactsView ? 'contacts' : isTruthDareView ? 'truth-dare' : isWerewolfView ? 'werewolf' : 'chat'"
       @close="closeMobileNavigation"
       @chat="navigateFromMobileDrawer(openChat)"
       @contacts="navigateFromMobileDrawer(openContacts)"
       @truth-dare="navigateFromMobileDrawer(openTruthDare)"
+      @werewolf="navigateFromMobileDrawer(openWerewolf)"
       @settings="navigateFromMobileDrawer(openSettings)"
       @admin="navigateFromMobileDrawer(openAdmin)"
       @notification="toggleNotifications"

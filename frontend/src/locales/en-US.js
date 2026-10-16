@@ -3,9 +3,11 @@ import bridge from './instance-bridge/en-US.js';
 
 import rbac from './rbac/en-US.js';
 import truthDare from './truth-dare/en-US.js';
+import werewolf from './werewolf/en-US.js';
 export default {
   ...rbac,
   ...truthDare,
+  ...werewolf,
   'call.limit': 'The one-hour call limit was reached. Please call again.',
   'call.voice': 'Voice call',
   'call.mode': 'Connection mode',

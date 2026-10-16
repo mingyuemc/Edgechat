@@ -16,6 +16,14 @@ const allowMemberCreateGame = ref(false);
 const canReadTruthDareSettings = can('truth_dare.read');
 const canEditTruthDareSettings = can('truth_dare.settings.update');
 
+const werewolfLoading = ref(false);
+const werewolfSaving = ref(false);
+const werewolfError = ref('');
+const werewolfSaved = ref(false);
+const allowMemberCreateWerewolf = ref(false);
+const canReadWerewolfSettings = can('werewolf.read');
+const canEditWerewolfSettings = can('werewolf.settings.update');
+
 async function loadTruthDareSettings() {
   truthDareLoading.value = true;
   truthDareError.value = '';
@@ -44,8 +52,37 @@ async function saveTruthDareSettings() {
   }
 }
 
+async function loadWerewolfSettings() {
+  werewolfLoading.value = true;
+  werewolfError.value = '';
+  try {
+    const payload = await api.adminWerewolfSettings();
+    allowMemberCreateWerewolf.value = Boolean(payload.allowMemberCreate);
+  } catch (currentError) {
+    werewolfError.value = currentError.message;
+  } finally {
+    werewolfLoading.value = false;
+  }
+}
+
+async function saveWerewolfSettings() {
+  werewolfSaving.value = true;
+  werewolfError.value = '';
+  werewolfSaved.value = false;
+  try {
+    const payload = await api.saveAdminWerewolfSettings(allowMemberCreateWerewolf.value);
+    allowMemberCreateWerewolf.value = Boolean(payload.allowMemberCreate);
+    werewolfSaved.value = true;
+  } catch (currentError) {
+    werewolfError.value = currentError.message;
+  } finally {
+    werewolfSaving.value = false;
+  }
+}
+
 onMounted(() => {
   if (canReadTruthDareSettings) loadTruthDareSettings();
+  if (canReadWerewolfSettings) loadWerewolfSettings();
 });
 </script>
 
@@ -89,6 +126,36 @@ onMounted(() => {
               {{ truthDareSaving ? t('common.saving') : t('site.save') }}
             </UiButton>
             <span v-if="truthDareSaved" class="muted">{{ t('truthDare.admin.saved') }}</span>
+          </div>
+        </UiSurface>
+      </section>
+      <section id="werewolf-settings" class="admin-anchor-section">
+        <UiSurface class="panel">
+          <div class="admin-site-appearance__heading">
+            <div>
+              <h3 class="panel-title">{{ t('werewolf.admin.settingsTitle') }}</h3>
+              <p>{{ t('werewolf.admin.allowMemberCreateHint') }}</p>
+            </div>
+            <UiButton variant="secondary" size="sm" :disabled="werewolfLoading" @click="loadWerewolfSettings">
+              {{ werewolfLoading ? `${t('common.loading')}...` : t('site.reload') }}
+            </UiButton>
+          </div>
+
+          <p v-if="werewolfError" class="error-text">{{ werewolfError }}</p>
+          <label class="field">
+            <span>{{ t('werewolf.admin.allowMemberCreate') }}</span>
+            <input
+              type="checkbox"
+              :checked="allowMemberCreateWerewolf"
+              :disabled="!canEditWerewolfSettings || werewolfLoading"
+              @change="allowMemberCreateWerewolf = $event.target.checked"
+            />
+          </label>
+          <div v-if="canEditWerewolfSettings" class="inline-actions">
+            <UiButton :disabled="werewolfSaving || werewolfLoading" @click="saveWerewolfSettings">
+              {{ werewolfSaving ? t('common.saving') : t('site.save') }}
+            </UiButton>
+            <span v-if="werewolfSaved" class="muted">{{ t('werewolf.admin.saved') }}</span>
           </div>
         </UiSurface>
       </section>
