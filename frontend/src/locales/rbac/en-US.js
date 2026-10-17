@@ -95,5 +95,12 @@ export default {
   "rbac.scope.instance_bridge.manage": "Group ownership required for delegated admins",
   "rbac.permission.maintenance.read": "View health summary",
   "rbac.scope.maintenance.read": "Sanitized status, no diagnostic dump",
+  "rbac.module.werewolf": "Werewolf",
+  "rbac.permission.werewolf.read": "View Werewolf",
+  "rbac.scope.werewolf.read": "Game list, invitees and site toggle state",
+  "rbac.permission.werewolf.create": "Create Werewolf games",
+  "rbac.scope.werewolf.create": "Start games directly and approve others' requests",
+  "rbac.permission.werewolf.settings.update": "Update Werewolf settings",
+  "rbac.scope.werewolf.settings.update": "Site-level toggle for allowing members to create games",
 };
 

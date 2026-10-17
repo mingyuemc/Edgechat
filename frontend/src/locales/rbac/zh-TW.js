@@ -95,5 +95,12 @@ export default {
   "rbac.scope.instance_bridge.manage": "子管理員須為群主",
   "rbac.permission.maintenance.read": "查看健康摘要",
   "rbac.scope.maintenance.read": "脫敏狀態，不含診斷傾印",
+  "rbac.module.werewolf": "狼人殺",
+  "rbac.permission.werewolf.read": "查看狼人殺",
+  "rbac.scope.werewolf.read": "對局清單、受邀名單與站點開關狀態",
+  "rbac.permission.werewolf.create": "允許建立狼人殺遊戲",
+  "rbac.scope.werewolf.create": "可直接開局，並審批他人的開局申請",
+  "rbac.permission.werewolf.settings.update": "修改狼人殺設定",
+  "rbac.scope.werewolf.settings.update": "僅站點級「允許成員建立遊戲」開關",
 };
 
