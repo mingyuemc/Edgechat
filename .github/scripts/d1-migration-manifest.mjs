@@ -261,6 +261,11 @@ export const D1_MIGRATIONS = [
       "index:idx_werewolf_night_actions_round",
     ],
   },
+  {
+    id: "2026-10-17-game-application-title",
+    file: "worker/migrations/2026-10-17-game-application-title.sql",
+    artifacts: ["column:truth_dare_applications.title", "column:werewolf_applications.title"],
+  },
 ];
 
 // b3f6855 曾发布、0c13e8f 已撤回的迁移：仅识别历史 ledger，不要求新安装创建废弃表，也不删除旧数据。

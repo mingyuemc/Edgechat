@@ -23,6 +23,21 @@ let mediaQuery = null;
 const count = computed(() => props.participants.length);
 const sectorAngle = computed(() => (count.value ? 360 / count.value : 0));
 
+// 扇形越窄，标签可用宽度越小：按人数自适应截断长度，避免名字被生硬拦腰截断。
+const labelMax = computed(() => {
+  const n = count.value;
+  if (n <= 4) return 8;
+  if (n <= 8) return 5;
+  if (n <= 12) return 3;
+  return 2;
+});
+
+function shortenLabel(value) {
+  const text = String(value ?? '').trim() || '?';
+  if (text.length <= labelMax.value) return text;
+  return `${text.slice(0, labelMax.value - 1)}…`;
+}
+
 function polar(deg, radius) {
   const rad = (deg * Math.PI) / 180;
   return { x: 100 + radius * Math.sin(rad), y: 100 - radius * Math.cos(rad) };
@@ -41,7 +56,7 @@ const sectors = computed(() => {
     const largeArc = deg > 180 ? 1 : 0;
     const hue = Math.round((index / n) * 300 + 190) % 360;
     const light = 52 + (index % 2) * 8;
-    const label = String(participant.label ?? participant.displayName ?? participant.username ?? '?').slice(0, 3);
+    const label = shortenLabel(participant.label ?? participant.displayName ?? participant.username);
     return {
       index,
       start,

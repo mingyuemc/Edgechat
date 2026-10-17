@@ -210,6 +210,7 @@ export function mapGameSummary(row) {
 export function mapApplication(row) {
   return {
     id: Number(row.id),
+    title: row.title || '',
     scope: row.scope,
     channelId: row.channel_id == null ? null : Number(row.channel_id),
     channelName: row.channel_name || '',
@@ -225,6 +226,7 @@ export function mapApplication(row) {
 export function mapPendingApplication(row) {
   return {
     id: Number(row.id),
+    title: row.title || '',
     applicantId: Number(row.applicant_id),
     applicantName: row.applicant_name || '',
     scope: row.scope,
@@ -310,7 +312,7 @@ export async function listPendingApplications(db) {
   const { results } = await db
     .prepare(
       `SELECT a.id, a.applicant_id, applicant.display_name AS applicant_name, a.scope, a.channel_id,
-          c.name AS channel_name, a.invited_user_ids, a.note, a.created_at
+          c.name AS channel_name, a.title, a.invited_user_ids, a.note, a.created_at
        FROM werewolf_applications a
        LEFT JOIN users applicant ON applicant.id = a.applicant_id
        LEFT JOIN channels c ON c.id = a.channel_id
@@ -325,7 +327,7 @@ export async function listPendingApplications(db) {
 export async function listMyApplications(db, userId) {
   const { results } = await db
     .prepare(
-      `SELECT a.id, a.scope, a.channel_id, c.name AS channel_name, a.note, a.status,
+      `SELECT a.id, a.scope, a.channel_id, c.name AS channel_name, a.title, a.note, a.status,
           a.review_reason, a.game_id, a.created_at, a.reviewed_at
        FROM werewolf_applications a
        LEFT JOIN channels c ON c.id = a.channel_id
@@ -430,15 +432,15 @@ export async function createGameWithParticipants(db, { creatorId, scope, channel
   return gameId;
 }
 
-export async function createApplication(db, { applicantId, scope, channelId = null, invitedUserIds = [], note = '', roleConfig = {}, assignMode = 'auto' }) {
+export async function createApplication(db, { applicantId, scope, channelId = null, title = '', invitedUserIds = [], note = '', roleConfig = {}, assignMode = 'auto' }) {
   const config = validateRoleConfig(roleConfig);
   const mode = validateAssignMode(assignMode);
   const result = await db
     .prepare(
-      `INSERT INTO werewolf_applications (applicant_id, scope, channel_id, invited_user_ids, note, status, role_config, assign_mode)
-       VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)`
+      `INSERT INTO werewolf_applications (applicant_id, scope, channel_id, title, invited_user_ids, note, status, role_config, assign_mode)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`
     )
-    .bind(Number(applicantId), scope, channelId == null ? null : Number(channelId), JSON.stringify(invitedUserIds || []), String(note || ''), JSON.stringify(config), mode)
+    .bind(Number(applicantId), scope, channelId == null ? null : Number(channelId), String(title || ''), JSON.stringify(invitedUserIds || []), String(note || ''), JSON.stringify(config), mode)
     .run();
   return Number(result.meta.last_row_id);
 }

@@ -116,6 +116,7 @@ export function registerWerewolfRoutes(app) {
       applicantId: session.userId,
       scope,
       channelId,
+      title,
       // 只有 manual 需要留存受邀名单；channel 范围审批时按当时的群成员重新解析。
       invitedUserIds: scope === 'manual' ? participantUserIds : [],
       note: String(payload.note || '').trim(),
@@ -166,7 +167,7 @@ export function registerWerewolfRoutes(app) {
       creatorId: application.applicant_id,
       scope: application.scope,
       channelId: application.channel_id,
-      title: '',
+      title: application.title,
       participantUserIds,
       roleConfig: application.role_config,
       assignMode: application.assign_mode
