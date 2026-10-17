@@ -60,7 +60,7 @@ export function inspectEnvironment(env: MaintenanceEnv) {
   return [
     { name: 'EDGECHAT_ENCRYPTION_KEYRING / EDGECHAT_ENCRYPTION_ACTIVE_KEY_ID + EDGECHAT_ENCRYPTION_KEY_N', required: true, present: encryptionPresent },
     { name: 'EDGECHAT_TURN_KEY_ID + EDGECHAT_TURN_API_TOKEN', required: false, present: present('EDGECHAT_TURN_KEY_ID') && present('EDGECHAT_TURN_API_TOKEN') },
-    ...['ADMIN_USERNAMES', 'MESSAGE_RETENTION_DAYS', 'SOFT_DELETE_RETENTION_DAYS', 'MAX_FILE_SIZE', 'ALLOWED_FILE_TYPES'].map((name) => ({ name, required: false, present: present(name) }))
+    ...['ADMIN_USERNAMES', 'MESSAGE_RETENTION_DAYS', 'SOFT_DELETE_RETENTION_DAYS', 'MAX_FILE_SIZE', 'ALLOWED_FILE_TYPES', 'R2_MAX_TOTAL_BYTES'].map((name) => ({ name, required: false, present: present(name) }))
   ];
 }
 

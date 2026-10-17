@@ -6,6 +6,7 @@ import {
 } from '../data/uploaded-files.js';
 import { decryptAttachment, encryptAttachment } from '../encryption.js';
 import { normalizeContentType, sanitizeFilename } from '../attachment-metadata.js';
+import { enforceR2Quota } from '../r2-quota.js';
 import { validateSession } from '../session.js';
 import { errorResponse, requestBodyTooLarge } from '../utils.js';
 
@@ -199,6 +200,13 @@ export async function saveUploadedFile(env, session, file, { clientUploadId = nu
       if (existing) return { file: existing, created: false };
     }
     throw error;
+  }
+
+  // 上传登记成功后，若 R2 登记占用超出配额，按创建时间淘汰最早的既有文件（仍被引用的会被跳过）。
+  try {
+    await enforceR2Quota(env, { protectedKey: key });
+  } catch (error) {
+    console.warn('Failed to enforce R2 quota after upload', error);
   }
 
   return {

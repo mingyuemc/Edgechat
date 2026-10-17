@@ -33,6 +33,43 @@ export async function recordUploadedFile(
 		.run();
 }
 
+// R2 配额淘汰：统计仍被登记（未进入清理）的占用总量。
+export async function sumUploadedFileBytes(db) {
+	const row = await db
+		.prepare(
+			`SELECT COALESCE(SUM(size), 0) AS total
+			 FROM uploaded_files
+			 WHERE NOT EXISTS (
+			   SELECT 1 FROM pending_r2_delete
+			   WHERE pending_r2_delete.object_key = uploaded_files.object_key
+			 )`,
+		)
+		.first();
+	return Math.max(0, Number(row?.total) || 0);
+}
+
+// 按创建时间升序给出最早的候选文件及其大小，用于优先淘汰最早上传的对象。
+export async function listEvictionCandidates(db, limit, excludeKey = "") {
+	const { results } = await db
+		.prepare(
+			`SELECT object_key, size
+			 FROM uploaded_files
+			 WHERE object_key != ?
+			   AND NOT EXISTS (
+			     SELECT 1 FROM pending_r2_delete
+			     WHERE pending_r2_delete.object_key = uploaded_files.object_key
+			   )
+			 ORDER BY created_at ASC, object_key ASC
+			 LIMIT ?`,
+		)
+		.bind(String(excludeKey || ""), Number(limit))
+		.all();
+	return results.map((row) => ({
+		key: String(row.object_key),
+		size: Math.max(0, Number(row.size) || 0),
+	}));
+}
+
 function mapUploadedFile(row) {
 	return row
 		? {
