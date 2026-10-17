@@ -1,4 +1,5 @@
 import { verifyPassword } from '../auth.js';
+import { R2QuotaExceededError } from '../r2-quota.js';
 import { saveUploadedFile } from './upload.js';
 import {
   getRoomSyncCursor,
@@ -288,6 +289,9 @@ export function registerV1Routes(app) {
       const result = await saveUploadedFile(c.env, c.get('session'), file, { clientUploadId });
       return c.json(result, result.created ? 201 : 200);
     } catch (error) {
+      if (error instanceof R2QuotaExceededError) {
+        return v1ErrorResponse('storage_quota_exceeded', error.message, 507);
+      }
       const message = String(error?.message || '上传失败');
       if (message.startsWith('文件大小不能超过') || message === '该文件类型不允许上传') {
         return v1ErrorResponse('upload_rejected', message);

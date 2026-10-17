@@ -33,16 +33,17 @@ export async function recordUploadedFile(
 		.run();
 }
 
-// R2 配额淘汰：统计仍被登记（未进入清理）的占用总量。
-export async function sumUploadedFileBytes(db) {
+// R2 配额核对：登记中的上传（含待删除但对象仍占用的）+ 未删除的 Telegram 外部附件。
+// 宁可高估也不低估，避免对象尚在 R2 时误判还有空间。
+export async function sumTrackedR2Bytes(db) {
 	const row = await db
 		.prepare(
-			`SELECT COALESCE(SUM(size), 0) AS total
-			 FROM uploaded_files
-			 WHERE NOT EXISTS (
-			   SELECT 1 FROM pending_r2_delete
-			   WHERE pending_r2_delete.object_key = uploaded_files.object_key
-			 )`,
+			`SELECT
+			   (SELECT COALESCE(SUM(size), 0) FROM uploaded_files)
+			   +
+			   (SELECT COALESCE(SUM(attachment_size), 0) FROM messages
+			    WHERE deleted_at IS NULL AND attachment_key LIKE 'telegram/%')
+			 AS total`,
 		)
 		.first();
 	return Math.max(0, Number(row?.total) || 0);

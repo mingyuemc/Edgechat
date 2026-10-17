@@ -6,7 +6,7 @@ import {
 } from '../data/uploaded-files.js';
 import { decryptAttachment, encryptAttachment } from '../encryption.js';
 import { normalizeContentType, sanitizeFilename } from '../attachment-metadata.js';
-import { enforceR2Quota } from '../r2-quota.js';
+import { ensureR2Capacity, R2QuotaExceededError } from '../r2-quota.js';
 import { validateSession } from '../session.js';
 import { errorResponse, requestBodyTooLarge } from '../utils.js';
 
@@ -93,6 +93,9 @@ export function registerUploadRoutes(app) {
       const result = await saveUploadedFile(c.env, session, file);
       return c.json({ file: result.file });
     } catch (error) {
+      if (error instanceof R2QuotaExceededError) {
+        return errorResponse(error.message, 507);
+      }
       const message = String(error?.message || '');
       if (message.startsWith('文件大小不能超过') || message === '该文件类型不允许上传') {
         return errorResponse(message);
@@ -173,6 +176,10 @@ export async function saveUploadedFile(env, session, file, { clientUploadId = nu
   const key = `${session.userId}/${Date.now()}-${crypto.randomUUID()}${extension}`;
   const filename = sanitizeFilename(file.name);
   const contentType = normalizeContentType(file.type) || 'application/octet-stream';
+
+  // 写入前先核对配额：不足时淘汰最早的未引用文件，仍不足则拒绝上传，确保 R2 永不超限。
+  await ensureR2Capacity(env, file.size, { protectedKey: key });
+
   const encryptedFile = await encryptAttachment(env, await file.arrayBuffer(), key);
   await env.FILES.put(key, encryptedFile, {
     httpMetadata: { contentType, cacheControl: FILE_RESPONSE_CACHE_CONTROL },
@@ -200,13 +207,6 @@ export async function saveUploadedFile(env, session, file, { clientUploadId = nu
       if (existing) return { file: existing, created: false };
     }
     throw error;
-  }
-
-  // 上传登记成功后，若 R2 登记占用超出配额，按创建时间淘汰最早的既有文件（仍被引用的会被跳过）。
-  try {
-    await enforceR2Quota(env, { protectedKey: key });
-  } catch (error) {
-    console.warn('Failed to enforce R2 quota after upload', error);
   }
 
   return {

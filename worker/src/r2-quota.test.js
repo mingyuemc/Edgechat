@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
 	DEFAULT_R2_MAX_TOTAL_BYTES,
-	enforceR2Quota,
+	R2QuotaExceededError,
+	ensureR2Capacity,
 	resolveR2MaxTotalBytes,
 } from "./r2-quota.js";
 
@@ -32,14 +33,15 @@ function createStore(sizes) {
 	};
 }
 
-test("未超出配额时不查询候选也不淘汰文件", async () => {
+test("配额足够时不查询候选也不淘汰文件", async () => {
 	let cleanupCalls = 0;
-	const summary = await enforceR2Quota(
-		{ DB: {}, FILES: {}, R2_MAX_TOTAL_BYTES: "1000" },
+	const summary = await ensureR2Capacity(
+		{ DB: {}, FILES: {}, R2_MAX_TOTAL_BYTES: "100" },
+		50,
 		{
-			sumBytes: async () => 500,
+			sumBytes: async () => 50,
 			listCandidates: async () => {
-				throw new Error("配额内不应扫描候选文件");
+				throw new Error("配额充足时不应扫描候选文件");
 			},
 			cleanup: async () => {
 				cleanupCalls += 1;
@@ -52,15 +54,16 @@ test("未超出配额时不查询候选也不淘汰文件", async () => {
 	assert.equal(cleanupCalls, 0);
 });
 
-test("超出配额时按创建时间顺序只淘汰覆盖缺口所需的早期文件", async () => {
+test("写入会超限时按创建时间顺序淘汰最早的未引用文件", async () => {
 	const store = createStore([
-		["oldest", 60],
-		["middle", 60],
-		["newest", 60],
+		["oldest", 100],
+		["middle", 50],
+		["newest", 30],
 	]);
 	const cleanupBatches = [];
-	const summary = await enforceR2Quota(
+	const summary = await ensureR2Capacity(
 		{ DB: {}, FILES: {}, R2_MAX_TOTAL_BYTES: "100" },
+		10,
 		{
 			protectedKey: "just-uploaded",
 			sumBytes: async () => store.totalBytes(),
@@ -72,55 +75,68 @@ test("超出配额时按创建时间顺序只淘汰覆盖缺口所需的早期�
 		},
 	);
 
-	assert.equal(summary.deletedFiles, 2);
-	assert.deepEqual(cleanupBatches, [["oldest", "middle"]]);
+	assert.equal(summary.deletedFiles, 1);
+	assert.deepEqual(cleanupBatches, [["oldest"]]);
 	assert.deepEqual(
 		store.entries.map((entry) => entry.key),
-		["newest"],
+		["middle", "newest"],
 	);
-	assert.ok(store.totalBytes() <= 100);
+	assert.ok(store.totalBytes() + 10 <= 100);
 });
 
-test("候选文件都被引用无法删除时停止继续淘汰", async () => {
+test("候选文件都被引用无法腾出空间时拒绝写入", async () => {
 	let cleanupCalls = 0;
-	const summary = await enforceR2Quota(
-		{ DB: {}, FILES: {}, R2_MAX_TOTAL_BYTES: "100" },
-		{
-			sumBytes: async () => 500,
-			listCandidates: async () => [{ key: "referenced", size: 500 }],
-			cleanup: async () => {
-				cleanupCalls += 1;
-				return { r2Deleted: 0, r2SkippedReferenced: 1 };
+	await assert.rejects(
+		ensureR2Capacity(
+			{ DB: {}, FILES: {}, R2_MAX_TOTAL_BYTES: "100" },
+			50,
+			{
+				sumBytes: async () => 100,
+				listCandidates: async () => [{ key: "referenced", size: 100 }],
+				cleanup: async () => {
+					cleanupCalls += 1;
+					return { r2Deleted: 0, r2SkippedReferenced: 1 };
+				},
 			},
+		),
+		(error) => {
+			assert.ok(error instanceof R2QuotaExceededError);
+			assert.equal(error.status, 507);
+			return true;
 		},
 	);
-
 	assert.equal(cleanupCalls, 1);
-	assert.equal(summary.deletedFiles, 0);
-	assert.equal(summary.skippedReferenced, 1);
 });
 
-test("没有可淘汰候选时直接返回", async () => {
-	let cleanupCalls = 0;
-	const summary = await enforceR2Quota(
-		{ DB: {}, FILES: {}, R2_MAX_TOTAL_BYTES: "100" },
-		{
-			sumBytes: async () => 500,
-			listCandidates: async () => [],
-			cleanup: async () => {
-				cleanupCalls += 1;
-				return { r2Deleted: 1 };
+test("没有可淘汰候选且已超限时拒绝写入", async () => {
+	await assert.rejects(
+		ensureR2Capacity(
+			{ DB: {}, FILES: {}, R2_MAX_TOTAL_BYTES: "100" },
+			50,
+			{
+				sumBytes: async () => 120,
+				listCandidates: async () => [],
+				cleanup: async () => ({ r2Deleted: 1 }),
 			},
-		},
+		),
+		R2QuotaExceededError,
 	);
-
-	assert.equal(cleanupCalls, 0);
-	assert.equal(summary.deletedFiles, 0);
 });
 
-test("未绑定 R2 或数据库时不做任何处理", async () => {
-	assert.equal((await enforceR2Quota({ R2_MAX_TOTAL_BYTES: "100" })).deletedFiles, 0);
-	assert.equal((await enforceR2Quota({ DB: {}, R2_MAX_TOTAL_BYTES: "100" })).deletedFiles, 0);
+test("单次上传本身超过配额时直接拒绝", async () => {
+	await assert.rejects(
+		ensureR2Capacity(
+			{ DB: {}, FILES: {}, R2_MAX_TOTAL_BYTES: "100" },
+			200,
+			{ sumBytes: async () => 0, listCandidates: async () => [] },
+		),
+		R2QuotaExceededError,
+	);
+});
+
+test("未绑定 R2 或数据库时不拦截写入", async () => {
+	assert.equal((await ensureR2Capacity({ R2_MAX_TOTAL_BYTES: "100" }, 999)).deletedFiles, 0);
+	assert.equal((await ensureR2Capacity({ DB: {}, R2_MAX_TOTAL_BYTES: "100" }, 999)).deletedFiles, 0);
 });
 
 test("配额解析使用默认 10GiB 并可被环境变量覆盖", () => {

@@ -4,12 +4,14 @@ import {
 	sanitizeFilename,
 } from "../../attachment-metadata.js";
 import { decryptAttachment, encryptAttachment } from "../../encryption.js";
+import { ensureR2Capacity, R2QuotaExceededError } from "../../r2-quota.js";
 import { downloadTelegramFile, getTelegramFile } from "./client.js";
 
 export const TELEGRAM_BRIDGE_FILE_LIMIT = 16 * 1024 * 1024;
 export const TELEGRAM_FILE_SKIP_REASON = Object.freeze({
 	TOO_LARGE: "too_large",
 	STORAGE_UNAVAILABLE: "storage_unavailable",
+	STORAGE_QUOTA: "storage_quota",
 	NOT_FOUND: "not_found",
 });
 const FILE_RESPONSE_CACHE_CONTROL = "private, no-store";
@@ -49,6 +51,18 @@ export async function importTelegramAttachment(env, {
 	const name = sanitizeFilename(attachment.fileName);
 	const type = normalizeContentType(attachment.mimeType) || "application/octet-stream";
 	const key = telegramObjectKey({ telegramChatId, telegramMessageId, filename: name });
+	// 写入前核对 R2 配额，超出上限时跳过附件同步，避免外部附件把 R2 顶过免费额度。
+	try {
+		await ensureR2Capacity(env, resolvedSize);
+	} catch (error) {
+		if (error instanceof R2QuotaExceededError) {
+			return {
+				attachment: null,
+				skipReason: TELEGRAM_FILE_SKIP_REASON.STORAGE_QUOTA,
+			};
+		}
+		throw error;
+	}
 	// Telegram 只负责传输，正式附件在进入消息前即转换为 EdgeChat 自有加密 R2 对象。
 	const encrypted = await encryptAttachment(env, bytes, key);
 	await env.FILES.put(key, encrypted, {
