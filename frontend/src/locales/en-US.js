@@ -104,6 +104,8 @@ export default {
   'auth.registering': 'Creating account...',
   'auth.completeRegistration': 'Complete registration',
   'auth.passwordMismatch': 'The passwords do not match.',
+  'auth.captchaRequired': 'Please complete the human verification first.',
+  'auth.captchaError': 'Failed to load the verification challenge. Please refresh and try again.',
   'auth.signOut': 'Sign out',
   'settings.title': 'Settings',
   'settings.profileKicker': 'Profile',

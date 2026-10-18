@@ -24,6 +24,7 @@ const fixedErrorTranslations = new Map([
   ['用户名和密码不能为空', 'Username and password are required'],
   ['该用户名不可用于邀请注册', 'This username cannot be used for invitation registration'],
   ['请输入用户名和密码', 'Please enter your username and password'],
+  ['人机验证未通过，请重试', 'Human verification failed. Please try again.'],
   ['账号或密码错误', 'Incorrect username or password'],
   ['账号已不可用', 'This account is no longer available'],
   ['请填写完整密码', 'Please fill in all password fields'],

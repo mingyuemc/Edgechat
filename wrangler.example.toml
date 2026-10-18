@@ -25,6 +25,9 @@ ALLOWED_FILE_TYPES = "image/,video/,audio/,application/pdf,text/"
 MAX_FILE_SIZE = "20971520"
 # R2 登记占用上限（字节）；新上传会使总量超限时，按创建时间淘汰最早的文件。默认 10GiB。
 R2_MAX_TOTAL_BYTES = "10737418240"
+# 可选：Cloudflare Turnstile 人机验证。公开的 site key 与私密的 secret key 同时配置时才在登录和邀请注册时校验；
+# 任意一项留空则自动跳过，不会强制拦截。secret key 请用 `wrangler secret put TURNSTILE_SECRET_KEY` 设置，不要写进本文件。
+TURNSTILE_SITE_KEY = ""
 
 [[d1_databases]]
 binding = "DB"

@@ -5,6 +5,7 @@ import store from '../store.js';
 import { useCursor } from '../composables/useCursor.js';
 import { useI18n } from '../i18n.js';
 import LanguageSwitch from '../components/ui/LanguageSwitch.vue';
+import TurnstileWidget from '../components/ui/TurnstileWidget.vue';
 import { getStoredNativeServerOrigin, isCapacitorAndroid } from '../capacitor-platform.ts';
 import { readLoginSubmission } from '../login-submission.ts';
 import { loadAuthFonts } from '../auth-fonts.js';
@@ -16,6 +17,8 @@ const router = useRouter();
 const { t } = useI18n();
 const loading = ref(false);
 const error = ref('');
+const captchaToken = ref('');
+const captchaReady = ref(false);
 const form = reactive({
   serverOrigin: getStoredNativeServerOrigin(),
   username: '',
@@ -29,6 +32,7 @@ const serverInput = ref(null);
 const usernameCursor = ref(null);
 const passwordCursor = ref(null);
 const serverCursor = ref(null);
+const captchaWidget = ref(null);
 
 useCursor([
   [serverInput, serverCursor],
@@ -36,19 +40,50 @@ useCursor([
   [passwordInput, passwordCursor]
 ]);
 
+function onCaptchaReady() {
+  captchaReady.value = true;
+}
+
+function onCaptchaVerified(token) {
+  captchaToken.value = token;
+}
+
+function onCaptchaExpired() {
+  captchaToken.value = '';
+}
+
+function onCaptchaError() {
+  error.value = t('auth.captchaError');
+}
+
+// 单次 token 提交后即失效，登录失败时重置以重新获取。
+function resetCaptcha() {
+  captchaToken.value = '';
+  captchaWidget.value?.reset();
+}
+
 async function submit(event) {
+  if (captchaReady.value && !captchaToken.value) {
+    error.value = t('auth.captchaRequired');
+    return;
+  }
+
   loading.value = true;
   error.value = '';
   try {
     // Android WebView 的自动填充不一定触发 input 事件，提交时以输入框当前值为准。
     const submitted = new FormData(event.currentTarget);
     const { serverOrigin, credentials } = readLoginSubmission(submitted);
+    if (captchaToken.value) {
+      credentials.captchaResponse = captchaToken.value;
+    }
     if (isCapacitorAndroid) {
       await store.configureNativeServer(serverOrigin);
     }
     await store.login(credentials);
     router.push('/');
   } catch (currentError) {
+    resetCaptcha();
     error.value = currentError.message === 'native_server_https_required'
       ? t('auth.serverHttpsRequired')
       : currentError.message === 'native_server_unavailable'
@@ -112,6 +147,17 @@ async function submit(event) {
             type="password"
           />
         </div>
+
+        <TurnstileWidget
+          v-if="store.site.turnstileSiteKey"
+          ref="captchaWidget"
+          :site-key="store.site.turnstileSiteKey"
+          action="login"
+          @ready="onCaptchaReady"
+          @verified="onCaptchaVerified"
+          @expired="onCaptchaExpired"
+          @error="onCaptchaError"
+        />
 
         <button class="login-btn" :disabled="loading" type="submit">
           {{ loading ? t('auth.signingIn') : t('auth.signIn') }}

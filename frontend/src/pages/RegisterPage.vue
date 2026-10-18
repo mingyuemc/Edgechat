@@ -6,6 +6,7 @@ import store from '../store.js';
 import { useCursor } from '../composables/useCursor.js';
 import { useI18n } from '../i18n.js';
 import LanguageSwitch from '../components/ui/LanguageSwitch.vue';
+import TurnstileWidget from '../components/ui/TurnstileWidget.vue';
 import { loadAuthFonts } from '../auth-fonts.js';
 
 onMounted(loadAuthFonts);
@@ -17,6 +18,9 @@ const loading = ref(false);
 const validating = ref(false);
 const error = ref('');
 const invite = ref(null);
+const captchaToken = ref('');
+const captchaReady = ref(false);
+const captchaWidget = ref(null);
 
 const form = reactive({
   username: '',
@@ -64,22 +68,53 @@ async function submit() {
     error.value = t('auth.passwordMismatch');
     return;
   }
+  if (captchaReady.value && !captchaToken.value) {
+    error.value = t('auth.captchaRequired');
+    return;
+  }
 
   loading.value = true;
   error.value = '';
   try {
     // 确认密码只用于本地一致性校验，不能作为注册字段发送给后端。
-    await api.registerWithInvite(token.value, {
+    const payload = {
       username: form.username,
       displayName: form.displayName,
       password: form.password
-    });
+    };
+    if (captchaToken.value) {
+      payload.captchaResponse = captchaToken.value;
+    }
+    await api.registerWithInvite(token.value, payload);
     router.push({ name: 'login', query: { registered: '1' } });
   } catch (currentError) {
+    resetCaptcha();
     error.value = currentError.message;
   } finally {
     loading.value = false;
   }
+}
+
+function onCaptchaReady() {
+  captchaReady.value = true;
+}
+
+function onCaptchaVerified(token) {
+  captchaToken.value = token;
+}
+
+function onCaptchaExpired() {
+  captchaToken.value = '';
+}
+
+function onCaptchaError() {
+  error.value = t('auth.captchaError');
+}
+
+// 单次 token 提交后即失效，注册失败时重置以重新获取。
+function resetCaptcha() {
+  captchaToken.value = '';
+  captchaWidget.value?.reset();
 }
 
 onMounted(() => {
@@ -145,6 +180,17 @@ onMounted(() => {
             type="password"
           />
         </div>
+
+        <TurnstileWidget
+          v-if="store.site.turnstileSiteKey"
+          ref="captchaWidget"
+          :site-key="store.site.turnstileSiteKey"
+          action="register"
+          @ready="onCaptchaReady"
+          @verified="onCaptchaVerified"
+          @expired="onCaptchaExpired"
+          @error="onCaptchaError"
+        />
 
         <button class="login-btn" :disabled="loading" type="submit">
           {{ loading ? t('auth.registering') : t('auth.completeRegistration') }}

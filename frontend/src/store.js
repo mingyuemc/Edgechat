@@ -42,7 +42,8 @@ const state = reactive({
   session: null,
   site: {
     siteName: 'Edgechat',
-    siteIconUrl: ''
+    siteIconUrl: '',
+    turnstileSiteKey: ''
   }
 });
 
@@ -174,7 +175,9 @@ function refreshAuthorization() {
 function setSite(site) {
   state.site = {
     siteName: String(site?.siteName || 'Edgechat').trim() || 'Edgechat',
-    siteIconUrl: String(site?.siteIconUrl || '').trim()
+    siteIconUrl: String(site?.siteIconUrl || '').trim(),
+    // 人机验证开关由部署环境变量决定，其他接口的站点响应不含该字段，这里保留已加载的值。
+    turnstileSiteKey: String(site?.turnstileSiteKey ?? state.site.turnstileSiteKey ?? '').trim()
   };
   applySiteMetadata(state.site);
 }

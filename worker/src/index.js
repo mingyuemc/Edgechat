@@ -26,6 +26,7 @@ import { registerStealthRoutes } from './api/stealth.ts';
 import { createSiteEntry } from './stealth/entry.ts';
 import { loginWithPassword } from './login.ts';
 import { sessionCookie } from './session-cookie.ts';
+import { publicTurnstileSiteKey, verifyTurnstile } from './turnstile.ts';
 import { registerInstanceBridgePublicRoutes, registerInstanceBridgeRoutes } from './api/instance-bridge.ts';
 import { InstanceBridge } from './do/InstanceBridge.ts';
 import { rescueBridgeDeliveries } from './integrations/instance-bridge/delivery.ts';
@@ -88,9 +89,13 @@ app.use('/api/*', cors({
 
 app.get('/api/health', (c) => c.json({ ok: true }));
 
+function publicSiteSettings(env, site) {
+  return { ...site, turnstileSiteKey: publicTurnstileSiteKey(env) };
+}
+
 app.get('/api/site', async (c) => {
   const site = await getSiteSettings(c.env.DB);
-  return c.json({ site });
+  return c.json({ site: publicSiteSettings(c.env, site) });
 });
 
 registerTelegramPublicRoutes(app);
@@ -109,7 +114,7 @@ app.get('/api/register-links/:token', async (c) => {
   }
 
   return c.json({
-    site,
+    site: publicSiteSettings(c.env, site),
     invite: {
       note: invite.note,
       createdAt: invite.createdAt,
@@ -121,7 +126,7 @@ app.get('/api/register-links/:token', async (c) => {
 app.post('/api/register-links/:token/register', async (c) => {
   const token = String(c.req.param('token') || '').trim();
   const payload = await parseJsonRequest(c.req.raw);
-  if (Object.keys(payload).some((key) => !['username', 'displayName', 'password'].includes(key))) return errorResponse('请求包含不允许修改的字段');
+  if (Object.keys(payload).some((key) => !['username', 'displayName', 'password', 'captchaResponse'].includes(key))) return errorResponse('请求包含不允许修改的字段');
   const username = String(payload.username || '').trim();
   const password = String(payload.password || '');
   const displayName = String(payload.displayName || username).trim();
@@ -134,6 +139,11 @@ app.post('/api/register-links/:token/register', async (c) => {
   }
   if (isConfiguredAdminUsername(c.env, username)) {
     return errorResponse('该用户名不可用于邀请注册');
+  }
+
+  const captcha = await verifyTurnstile(c.env, payload.captchaResponse, c.req.header('CF-Connecting-IP'));
+  if (!captcha.ok) {
+    return errorResponse('人机验证未通过，请重试');
   }
 
   const invite = await getAvailableRegistrationInvite(c.env.DB, token);
@@ -161,6 +171,11 @@ app.post('/api/auth/login', async (c) => {
   const password = String(payload.password || '');
   if (!username || !password) {
     return errorResponse('请输入用户名和密码');
+  }
+
+  const captcha = await verifyTurnstile(c.env, payload.captchaResponse, c.req.header('CF-Connecting-IP'));
+  if (!captcha.ok) {
+    return errorResponse('人机验证未通过，请重试');
   }
 
   const session = await loginWithPassword(c.env, username, password, c.req.raw);

@@ -177,6 +177,8 @@ export default {
   "auth.registering": "註冊中...",
   "auth.completeRegistration": "完成註冊",
   "auth.passwordMismatch": "兩次輸入的密碼不一致",
+  "auth.captchaRequired": "請先完成人機驗證",
+  "auth.captchaError": "人機驗證載入失敗，請重新整理後再試",
   "auth.signOut": "退出登錄",
   "settings.title": "設置",
   "settings.profileKicker": "個人中心",

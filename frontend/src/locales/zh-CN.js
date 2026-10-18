@@ -83,6 +83,8 @@ export default {
   'auth.registering': '注册中...',
   'auth.completeRegistration': '完成注册',
   'auth.passwordMismatch': '两次输入的密码不一致',
+  'auth.captchaRequired': '请先完成人机验证',
+  'auth.captchaError': '人机验证加载失败，请刷新页面后重试',
   'auth.signOut': '退出登录',
   'settings.title': '设置',
   'settings.profileKicker': '个人中心',
