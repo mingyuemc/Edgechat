@@ -1,0 +1,15 @@
+Ensuring Cloudflare resources for production deployment...
+Target account: 0a621d6692d1873aeef9696e2fc0f4c3
+Using legacy Cloudflare resource names by default to avoid creating a second production stack.
+Creating D1 database: cfchat-db
+Creating KV namespace: cfchat-sessions
+Creating R2 bucket: cfchat-files
+[output] d1_database_name=cfchat-db
+[output] d1_database_id=80c1302f-1f7a-480f-8a5e-76e71443ee97
+[output] d1_created=true
+[output] kv_namespace_title=cfchat-sessions
+[output] kv_namespace_id=2b94a10c7c544b7f9d7dbf2a0d2bc87e
+[output] kv_created=true
+[output] r2_available=true
+[output] r2_bucket_name=cfchat-files
+[output] r2_created=true
