@@ -23,6 +23,8 @@ R2_DELETE_MAX_RETRY = "8"
 ORPHAN_UPLOAD_RETENTION_DAYS = "1"
 ALLOWED_FILE_TYPES = "image/,video/,audio/,application/pdf,text/"
 MAX_FILE_SIZE = "20971520"
+# R2 登记占用上限（字节）；新上传会使总量超限时，按创建时间淘汰最早的文件。默认 10GiB。
+R2_MAX_TOTAL_BYTES = "10737418240"
 
 [[d1_databases]]
 binding = "DB"

@@ -212,7 +212,9 @@ export async function ingestTelegramMessage(env, { mapping, telegramMessage, bot
 			? "附件超过 16 MB，未同步"
 			: imported.skipReason === TELEGRAM_FILE_SKIP_REASON.STORAGE_UNAVAILABLE
 				? "当前部署未启用文件存储，附件未同步"
-				: "";
+				: imported.skipReason === TELEGRAM_FILE_SKIP_REASON.STORAGE_QUOTA
+					? "存储空间已满，附件未同步"
+					: "";
 	const content = [telegramMessage.content, attachmentNotice].filter(Boolean).join("\n\n");
 	try {
 		const response = await submitExternalRoomMessage(env, {
